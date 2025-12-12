@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description: siteConfig.title,
 };
 
-export const revalidate = 86400; // 24 hours
+export const dynamic = 'force-dynamic';
 
 export default async function RootLayout({
   children,

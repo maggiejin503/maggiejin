@@ -6,8 +6,8 @@ import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
 
-// Enable ISR with a reasonable revalidation period for public notes
-export const revalidate = 86400; // 24 hours
+// Use dynamic rendering to support authentication
+export const dynamic = 'force-dynamic';
 
 // Cached function to fetch a note by slug - eliminates duplicate fetches
 const getNote = cache(async (slug: string) => {
