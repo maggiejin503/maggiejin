@@ -1,4 +1,5 @@
 import NewNote from "./new-note";
+import { LoginModal } from "./login-modal";
 
 interface NavProps {
   addNewPinnedNote: (slug: string) => void;
@@ -45,12 +46,15 @@ export function Nav({
           </span>
         </button>
       </div>
-      <NewNote
-        addNewPinnedNote={addNewPinnedNote}
-        clearSearch={clearSearch}
-        setSelectedNoteSlug={setSelectedNoteSlug}
-        isMobile={isMobile}
-      />
+      <div className="flex items-center gap-2">
+        <LoginModal />
+        <NewNote
+          addNewPinnedNote={addNewPinnedNote}
+          clearSearch={clearSearch}
+          setSelectedNoteSlug={setSelectedNoteSlug}
+          isMobile={isMobile}
+        />
+      </div>
     </div>
   );
 }

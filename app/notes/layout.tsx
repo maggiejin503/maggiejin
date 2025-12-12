@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 import SidebarLayout from "@/components/sidebar-layout";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/components/auth-provider";
 import "./globals.css";
 
 const fontSans = FontSans({
@@ -56,10 +57,12 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarLayout notes={notes}>
-            <Analytics />
-            {children}
-          </SidebarLayout>
+          <AuthProvider>
+            <SidebarLayout notes={notes}>
+              <Analytics />
+              {children}
+            </SidebarLayout>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

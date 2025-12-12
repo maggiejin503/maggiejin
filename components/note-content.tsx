@@ -5,6 +5,7 @@ import { Textarea } from "./ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Note } from "@/lib/types";
+import { useAuth } from "./auth-provider";
 
 export default function NoteContent({
   note,
@@ -16,6 +17,7 @@ export default function NoteContent({
   canEdit: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(!note.content && canEdit);
+  const { user } = useAuth();
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     saveNote({ content: e.target.value });
@@ -95,7 +97,7 @@ export default function NoteContent({
         <div
           className="h-full text-base md:text-sm"
           onClick={(e) => {
-            if (canEdit && !note.public) {
+            if (canEdit && (!note.public || user)) {
               setIsEditing(true);
             }
           }}

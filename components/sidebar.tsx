@@ -104,10 +104,18 @@ export default function Sidebar({
     refreshSessionNotes,
   } = useContext(SessionNotesContext);
 
-  const notes = useMemo(
-    () => [...publicNotes, ...sessionNotes],
-    [publicNotes, sessionNotes]
-  );
+  const notes = useMemo(() => {
+    const public_notes = publicNotes || [];
+    const session_notes = sessionNotes || [];
+
+    // Filter out session notes that are already in public notes (to avoid duplicates)
+    const publicNoteIds = new Set(public_notes.map((note: any) => note.id));
+    const uniqueSessionNotes = session_notes.filter(
+      (note: any) => !publicNoteIds.has(note.id)
+    );
+
+    return [...public_notes, ...uniqueSessionNotes];
+  }, [publicNotes, sessionNotes]);
 
   useEffect(() => {
     if (pathname) {

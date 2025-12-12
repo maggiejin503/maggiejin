@@ -26,7 +26,7 @@ export async function generateStaticParams() {
     .select("slug")
     .eq("public", true);
 
-  return posts!.map(({ slug }) => ({
+  return (posts || []).map(({ slug }) => ({
     slug,
   }));
 }
