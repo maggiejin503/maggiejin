@@ -45,11 +45,24 @@
 }
 
 .markdown-body a {
-  color: #e2a727; 
+  color: #e2a727;
   text-decoration: underline;
 }
 
 .markdown-body a:hover {
+  text-decoration: underline;
+}
+
+/* Text formatting */
+.markdown-body strong {
+  font-weight: 600;
+}
+
+.markdown-body em {
+  font-style: italic;
+}
+
+.markdown-body u {
   text-decoration: underline;
 }
 

@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Textarea } from "./ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import { Note } from "@/lib/types";
 import { useAuth } from "./auth-provider";
 
@@ -105,6 +106,7 @@ export default function NoteContent({
           <ReactMarkdown
             className="markdown-body min-h-dvh"
             remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
             components={{
               li: renderListItem,
               a: renderLink,
