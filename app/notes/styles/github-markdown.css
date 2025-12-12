@@ -66,6 +66,10 @@
   text-decoration: underline;
 }
 
+.markdown-body del {
+  text-decoration: line-through;
+}
+
 .markdown-body ul {
   list-style-type: disc;
   padding-left: 2em;
