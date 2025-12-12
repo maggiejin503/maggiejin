@@ -12,9 +12,17 @@ export const dynamic = 'force-dynamic';
 // Cached function to fetch a note by slug - eliminates duplicate fetches
 const getNote = cache(async (slug: string) => {
   const supabase = createServerClient();
-  const { data: note } = await supabase.rpc("select_note", {
+  const { data: note, error } = await supabase.rpc("select_note", {
     note_slug_arg: slug,
-  }).single() as { data: NoteType | null };
+  }).single() as { data: NoteType | null; error: any };
+
+  if (error) {
+    console.error('[getNote] RPC error for slug:', slug, error);
+  }
+  if (!note) {
+    console.log('[getNote] No note found for slug:', slug);
+  }
+
   return note;
 });
 
