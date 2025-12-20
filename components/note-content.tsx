@@ -94,11 +94,14 @@ export default function NoteContent({
     const end = textarea.selectionEnd;
     const selectedText = textarea.value.substring(start, end);
 
+    // Prompt for link text
+    const linkText = window.prompt('Enter text to display:', selectedText || '');
+    if (!linkText) return; // User cancelled
+
     // Prompt for URL
     const url = window.prompt('Enter URL:', 'https://');
     if (!url) return; // User cancelled
 
-    const linkText = selectedText || 'link text';
     const markdown = `[${linkText}](${url})`;
 
     const beforeText = textarea.value.substring(0, start);
@@ -109,14 +112,9 @@ export default function NoteContent({
 
     setTimeout(() => {
       textarea.focus();
-      if (!selectedText) {
-        // If no text was selected, select the "link text" placeholder
-        textarea.setSelectionRange(start + 1, start + 1 + 'link text'.length);
-      } else {
-        // Move cursor after the link
-        const newCursorPos = start + markdown.length;
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-      }
+      // Move cursor after the link
+      const newCursorPos = start + markdown.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
     }, 0);
   }, [saveNote]);
 
