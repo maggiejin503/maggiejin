@@ -11,6 +11,7 @@ interface SearchBarProps {
   setSearchQuery: (query: string) => void;
   setHighlightedIndex: Dispatch<SetStateAction<number>>;
   clearSearch: () => void;
+  user: any;
 }
 
 export function SearchBar({
@@ -22,6 +23,7 @@ export function SearchBar({
   setSearchQuery,
   setHighlightedIndex,
   clearSearch,
+  user,
 }: SearchBarProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -44,7 +46,8 @@ export function SearchBar({
 
     const filteredNotes = notes.filter(
       (note) =>
-        (note.public || note.session_id === sessionId) &&
+        // Admins can search all notes, others only public notes + their own session notes
+        (user || note.public || note.session_id === sessionId) &&
         (note.title.toLowerCase().includes(query.trim().toLowerCase()) ||
           note.content.toLowerCase().includes(query.trim().toLowerCase()))
     );

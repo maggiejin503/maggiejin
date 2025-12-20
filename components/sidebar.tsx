@@ -23,8 +23,10 @@ import { SessionNotesContext } from "@/app/notes/session-notes";
 import { Nav } from "./nav";
 import { useTheme } from "next-themes";
 import { ScrollArea } from "./ui/scroll-area";
+import { useAuth } from "./auth-provider";
 
 const labels = {
+  to_you: "To You",
   pinned: (
     <>
       <Pin className="inline-block w-4 h-4 mr-1" /> Pinned
@@ -37,7 +39,7 @@ const labels = {
   older: "Older",
 };
 
-const categoryOrder = ["pinned", "today", "yesterday", "7", "30", "older"];
+const categoryOrder = ["to_you", "pinned", "today", "yesterday", "7", "30", "older"];
 
 export default function Sidebar({
   notes: publicNotes,
@@ -50,6 +52,7 @@ export default function Sidebar({
 }) {
   const router = useRouter();
   const supabase = createClient();
+  const { user } = useAuth();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedNoteSlug, setSelectedNoteSlug] = useState<string | null>(null);
@@ -157,13 +160,23 @@ export default function Sidebar({
   }, [notes, sessionId]);
 
   useEffect(() => {
-    const userSpecificNotes = notes.filter(
-      (note) => note.public || note.session_id === sessionId
-    );
-    const grouped = groupNotesByCategory(userSpecificNotes, pinnedNotes);
+    // Admins see all notes, others see only public notes + their own session notes
+    const userSpecificNotes = user
+      ? notes
+      : notes.filter((note) => note.public || note.session_id === sessionId);
+
+    // For admin: categorize other users' private notes as "to_you"
+    const notesWithToYouCategory = userSpecificNotes.map((note) => {
+      if (user && !note.public && note.session_id !== sessionId) {
+        return { ...note, category: "to_you" };
+      }
+      return note;
+    });
+
+    const grouped = groupNotesByCategory(notesWithToYouCategory, pinnedNotes);
     sortGroupedNotes(grouped);
     setGroupedNotes(grouped);
-  }, [notes, sessionId, pinnedNotes]);
+  }, [notes, sessionId, pinnedNotes, user]);
 
   useEffect(() => {
     if (localSearchResults && localSearchResults.length > 0) {
@@ -263,11 +276,19 @@ export default function Sidebar({
       }
 
       try {
-        if (noteToDelete.id && sessionId) {
-          await supabase.rpc("delete_note", {
-            uuid_arg: noteToDelete.id,
-            session_arg: sessionId,
-          });
+        if (noteToDelete.id) {
+          if (user) {
+            // Authenticated users can delete any note
+            await supabase.rpc("admin_delete_note", {
+              uuid_arg: noteToDelete.id,
+            });
+          } else if (sessionId) {
+            // Non-authenticated users can only delete their session notes
+            await supabase.rpc("delete_note", {
+              uuid_arg: noteToDelete.id,
+              session_arg: sessionId,
+            });
+          }
         }
 
         setGroupedNotes((prevGroupedNotes: Record<string, Note[]>) => {
@@ -310,6 +331,7 @@ export default function Sidebar({
     [
       supabase,
       sessionId,
+      user,
       flattenedNotes,
       isMobile,
       clearSearch,
@@ -475,6 +497,7 @@ export default function Sidebar({
               setSearchQuery={setSearchQuery}
               setHighlightedIndex={setHighlightedIndex}
               clearSearch={clearSearch}
+              user={user}
             />
             <SidebarContent
               groupedNotes={groupedNotes}

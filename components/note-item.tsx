@@ -12,6 +12,7 @@ import {
 import { Note } from "@/lib/types";
 import { getDisplayDateByCategory } from "@/lib/note-utils";
 import { Dispatch, SetStateAction } from "react";
+import { useAuth } from "./auth-provider";
 
 function previewContent(content: string): string {
   return content
@@ -57,6 +58,7 @@ export function NoteItem({
   const isMobile = useMobileDetect();
   const [isSwiping, setIsSwiping] = useState(false);
   const isSwipeOpen = openSwipeItemSlug === item.slug;
+  const { user } = useAuth();
 
   useEffect(() => {
     const preventDefault = (e: TouchEvent) => {
@@ -87,7 +89,7 @@ export function NoteItem({
     setOpenSwipeItemSlug(null);
   };
 
-  const canEditOrDelete = item.session_id === sessionId;
+  const canEditOrDelete = item.session_id === sessionId || !!user;
 
   const handleSwipeAction = (action: () => void) => {
     if (isSwipeOpen) {
@@ -188,7 +190,7 @@ export function NoteItem({
           <ContextMenuItem onClick={handlePinAction} className="cursor-pointer">
             {isPinned ? "Unpin" : "Pin"}
           </ContextMenuItem>
-          {item.session_id === sessionId && (
+          {canEditOrDelete && (
             <>
               <ContextMenuItem onClick={handleEdit} className="cursor-pointer">
                 Edit

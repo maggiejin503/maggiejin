@@ -10,7 +10,8 @@ export function groupNotesByCategory(notes: any[], pinnedNotes: Set<string>) {
     }
 
     let category = note.category;
-    if (!note.public) {
+    // Skip recategorization for "to_you" notes (secret messages from others)
+    if (!note.public && category !== "to_you") {
       const createdDate = new Date(note.created_at);
       const today = new Date();
       const yesterday = new Date(today);
@@ -71,6 +72,9 @@ export function getDisplayDateByCategory(category: string | undefined, noteId: s
   const today = new Date();
 
   switch (category) {
+    case "to_you":
+      // For "to_you" notes, show current time (they're messages from others)
+      return new Date();
     case "today":
       const todayDate = new Date(today);
       // Random time between 8:00 AM and current time

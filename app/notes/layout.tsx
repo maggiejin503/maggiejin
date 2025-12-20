@@ -28,10 +28,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const supabase = createClient();
-  const { data: notes } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("public", true);
+
+  // Check if user is authenticated (admin)
+  const { data: { session } } = await supabase.auth.getSession();
+
+  // Admins see all notes, others see only public notes
+  const { data: notes } = session?.user
+    ? await supabase.from("notes").select("*")
+    : await supabase.from("notes").select("*").eq("public", true);
 
   return (
     <html lang="en" suppressHydrationWarning>

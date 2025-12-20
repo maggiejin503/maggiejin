@@ -5,6 +5,7 @@ import { createClient as createBrowserClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Note as NoteType } from "@/lib/types";
+import { cookies } from "next/headers";
 
 // Use dynamic rendering to support authentication
 export const dynamic = 'force-dynamic';
@@ -25,6 +26,32 @@ const getNote = cache(async (slug: string) => {
 
   return note;
 });
+
+// Check if user has permission to access a note
+async function canAccessNote(note: NoteType): Promise<boolean> {
+  // Public notes: everyone can access
+  if (note.public) {
+    return true;
+  }
+
+  const supabase = createServerClient();
+
+  // Check if user is authenticated (admin)
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) {
+    return true;
+  }
+
+  // Unauthenticated users: check session_id match
+  const cookieStore = cookies();
+  const sessionIdCookie = cookieStore.get('session_id');
+
+  if (sessionIdCookie && sessionIdCookie.value === note.session_id) {
+    return true;
+  }
+
+  return false;
+}
 
 // Dynamically determine if this is a user note
 export async function generateStaticParams() {
@@ -54,6 +81,13 @@ export async function generateMetadata({
     return { title: "Note not found" };
   }
 
+  // Check access permissions before showing metadata
+  const hasAccess = await canAccessNote(note);
+
+  if (!hasAccess) {
+    return { title: "Note not found" }; // Don't leak note existence
+  }
+
   const title = note.title || "new note";
   const emoji = note.emoji || "👋🏼";
 
@@ -79,6 +113,13 @@ export default async function NotePage({
 
   if (!note) {
     return redirect("/notes/error");
+  }
+
+  // Check access permissions
+  const hasAccess = await canAccessNote(note);
+
+  if (!hasAccess) {
+    return redirect("/notes/error"); // Show generic error
   }
 
   return (

@@ -7,10 +7,12 @@ import NoteContent from "./note-content";
 import SessionId from "./session-id";
 import { useState, useCallback, useRef, useContext } from "react";
 import { SessionNotesContext } from "@/app/notes/session-notes";
+import { useAuth } from "./auth-provider";
 
 export default function Note({ note: initialNote }: { note: any }) {
   const supabase = createClient();
   const router = useRouter();
+  const { user } = useAuth();
   const [note, setNote] = useState(initialNote);
   const [sessionId, setSessionId] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -47,31 +49,60 @@ export default function Note({ note: initialNote }: { note: any }) {
       const promises = [];
 
       if ('title' in updatesToSave) {
-        promises.push(
-          supabase.rpc("update_note_title", {
-            uuid_arg: currentNote.id,
-            session_arg: sessionId,
-            title_arg: updatesToSave.title,
-          })
-        );
+        if (user) {
+          // Authenticated users can update any note
+          promises.push(
+            supabase.rpc("admin_update_note_title", {
+              uuid_arg: currentNote.id,
+              title_arg: updatesToSave.title,
+            })
+          );
+        } else {
+          // Non-authenticated users can only update their session notes
+          promises.push(
+            supabase.rpc("update_note_title", {
+              uuid_arg: currentNote.id,
+              session_arg: sessionId,
+              title_arg: updatesToSave.title,
+            })
+          );
+        }
       }
       if ('emoji' in updatesToSave) {
-        promises.push(
-          supabase.rpc("update_note_emoji", {
-            uuid_arg: currentNote.id,
-            session_arg: sessionId,
-            emoji_arg: updatesToSave.emoji,
-          })
-        );
+        if (user) {
+          promises.push(
+            supabase.rpc("admin_update_note_emoji", {
+              uuid_arg: currentNote.id,
+              emoji_arg: updatesToSave.emoji,
+            })
+          );
+        } else {
+          promises.push(
+            supabase.rpc("update_note_emoji", {
+              uuid_arg: currentNote.id,
+              session_arg: sessionId,
+              emoji_arg: updatesToSave.emoji,
+            })
+          );
+        }
       }
       if ('content' in updatesToSave) {
-        promises.push(
-          supabase.rpc("update_note_content", {
-            uuid_arg: currentNote.id,
-            session_arg: sessionId,
-            content_arg: updatesToSave.content,
-          })
-        );
+        if (user) {
+          promises.push(
+            supabase.rpc("admin_update_note_content", {
+              uuid_arg: currentNote.id,
+              content_arg: updatesToSave.content,
+            })
+          );
+        } else {
+          promises.push(
+            supabase.rpc("update_note_content", {
+              uuid_arg: currentNote.id,
+              session_arg: sessionId,
+              content_arg: updatesToSave.content,
+            })
+          );
+        }
       }
       if ('public' in updatesToSave) {
         const { error } = await supabase
@@ -111,7 +142,7 @@ export default function Note({ note: initialNote }: { note: any }) {
     } finally {
       setIsSaving(false);
     }
-  }, [supabase, router, refreshSessionNotes, sessionId]);
+  }, [supabase, router, refreshSessionNotes, sessionId, user]);
 
   const saveNote = useCallback(
     async (updates: Partial<typeof note>) => {
@@ -144,7 +175,7 @@ export default function Note({ note: initialNote }: { note: any }) {
     saveToDatabase();
   }, [saveToDatabase]);
 
-  const canEdit = sessionId === note.session_id;
+  const canEdit = !!user || sessionId === note.session_id;
 
   return (
     <div className="h-full overflow-y-auto bg-background">
