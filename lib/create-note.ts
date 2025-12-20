@@ -14,6 +14,8 @@ export async function createNote(
   const noteId = uuidv4();
   const slug = `new-note-${noteId}`;
 
+  console.log('[createNote] sessionId:', sessionId);
+
   const note = {
     id: noteId,
     slug: slug,
@@ -26,8 +28,12 @@ export async function createNote(
     emoji: "👋🏼",
   };
 
+  console.log('[createNote] Creating note:', note);
+
   try {
     const { error } = await supabase.from("notes").insert(note);
+
+    console.log('[createNote] Insert result - error:', error);
 
     if (error) throw error;
 
@@ -51,5 +57,9 @@ export async function createNote(
     });
   } catch (error) {
     console.error("Error creating note:", error);
+    toast({
+      description: `Error creating note: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      variant: "destructive"
+    });
   }
 }
