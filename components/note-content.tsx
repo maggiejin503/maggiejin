@@ -86,6 +86,40 @@ export default function NoteContent({
     }, 0);
   }, [saveNote]);
 
+  const insertLink = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+
+    // Prompt for URL
+    const url = window.prompt('Enter URL:', 'https://');
+    if (!url) return; // User cancelled
+
+    const linkText = selectedText || 'link text';
+    const markdown = `[${linkText}](${url})`;
+
+    const beforeText = textarea.value.substring(0, start);
+    const afterText = textarea.value.substring(end);
+    const newText = beforeText + markdown + afterText;
+
+    saveNote({ content: newText });
+
+    setTimeout(() => {
+      textarea.focus();
+      if (!selectedText) {
+        // If no text was selected, select the "link text" placeholder
+        textarea.setSelectionRange(start + 1, start + 1 + 'link text'.length);
+      } else {
+        // Move cursor after the link
+        const newCursorPos = start + markdown.length;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }, 0);
+  }, [saveNote]);
+
   const insertLinePrefix = useCallback((prefix: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -142,13 +176,13 @@ export default function NoteContent({
         wrapSelectedText('<u>', '</u>');
       } else if (e.key === 'k') {
         e.preventDefault();
-        wrapSelectedText('[', '](url)');
+        insertLink();
       } else if (e.key === 'e') {
         e.preventDefault();
         wrapSelectedText('`', '`');
       }
     }
-  }, [wrapSelectedText]);
+  }, [wrapSelectedText, insertLink]);
 
   const handleMarkdownCheckboxChange = useCallback((taskText: string, isChecked: boolean) => {
     const updatedContent = note.content.replace(
@@ -243,7 +277,7 @@ export default function NoteContent({
             <FormattingButton onClick={() => insertLinePrefix('- [ ] ')} icon={CheckSquare} title="Task List" />
             <div className="w-px bg-gray-300 dark:bg-gray-700 mx-1" />
             <FormattingButton onClick={() => wrapSelectedText('`', '`')} icon={Code} title="Inline Code (Cmd+E)" />
-            <FormattingButton onClick={() => wrapSelectedText('[', '](url)')} icon={Link} title="Link (Cmd+K)" />
+            <FormattingButton onClick={insertLink} icon={Link} title="Link (Cmd+K)" />
           </div>
           <Textarea
             ref={textareaRef}
